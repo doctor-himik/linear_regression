@@ -3,7 +3,7 @@ import logging
 import time
 import random
 
-# Настройка логгера для вывода в консоль с уровнем INFO
+# Setting up the logger for console output with INFO level
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -15,25 +15,24 @@ class LinearRegressionWithGradientDescent:
     @staticmethod
     def data_normalizer(data: list[float]) -> list[float]:
         """
-        Нормализация данных позволяет сделать их сравнимыми
-        и улучшить сходимость алгоритма градиентного спуска.
+        Normalizing data actually looks like a crutch
+        Normalizing the data allows making it comparable and improving the convergence of the gradient descent algorithm.
 
-        Нормализация помогает избежать ситуаций, когда признаки (входные значения)
-        имеют разные масштабы, что может негативно сказаться на процессе обучения
-        модели. Например, если один признак имеет значения в диапазоне от 0 до 1,
-        а другой в диапазоне от 0 до 1000, то модель может отдать предпочтение
-        более крупному признаку, игнорируя другие, что приведет к неправильному обучению.
+        Normalization helps to avoid situations where the features (input values)
+        have different scales, which can negatively affect the training process
+        of the model. For example, if one feature has values in the range of 0 to 1,
+        and another in the range of 0 to 1000, then the model may give preference to
+        the larger feature, ignoring others, resulting in incorrect training.
 
-        Нормализация осуществляется по формуле:
-        normalized_value = (value - mean) / std_dev,
+        Normalization is carried out using the formula: normalized_value = (value - mean) / std_dev,
 
-        где mean - среднее значение списка, а std_dev - стандартное отклонение.
-        Если стандартное отклонение равно нулю (что может произойти, если все
-        значения в списке одинаковы), функция возвращает список, заполненный нулями
-        для избежания деления на ноль.
+        where mean is the average value of the list, and std_dev is the standard deviation.
+        If the standard deviation equals zero (which can happen if all
+        values in the list are the same), the function returns a list filled with zeros
+        to avoid division by zero.
 
-        :param data: Список числовых значений, которые требуется нормализовать.
-        :return: Новый список, содержащий нормализованные значения.
+        :param data: A list of numerical values to be normalized.
+        :return: A new list containing the normalized values.
         """
         mean = sum(data) / len(data)
         std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
@@ -48,43 +47,45 @@ class LinearRegressionWithGradientDescent:
             w: float,
             b: float,
             learning_rate: float,
-            tikhonov_regular: float  # Параметр регуляризации
+            tikhonov_regular: float  # Regularization parameter
     ) -> tuple[float, float]:
         """
-        Выполняет один шаг градиентного спуска для обновления параметров линейной модели y = w * x + b.
+        Performs one step of gradient descent to update the parameters of the linear model y = w * x + b.
 
-        :param spendings: список значений признака
-        :param sales: список значений целевой переменной
-        :param w: текущий коэффициент наклона модели
-        :param b: текущий свободный член модели
-        :param learning_rate: скорость обучения, шаг с которым мы двигаемся
-        :param tikhonov_regular: параметр регуляризации, регуляризация Тихонова или L2 (Ridge) регуляризация
-        :return: обновленные параметры (w, b)
+        :param spendings: A list of feature values
+        :param sales: A list of target variable values
+        :param w: The current slope coefficient of the model
+        :param b: The current intercept of the model
+        :param learning_rate: The learning rate, the step we take
+        :param tikhonov_regular: Regularization parameter, regularization Тихонова or L2 (Ridge) regularization
+        :return: Updated parameters (w, b)
         """
-        dl_dw = 0.0  # накопитель градиента по w
-        dl_db = 0.0  # накопитель градиента по b
+        # TODO switch to common notation X Y
+        dl_dw = 0.0  # Gradient accumulator for w
+        dl_db = 0.0  # Gradient accumulator for b
         N = len(spendings)
 
         for i in range(N):
             prediction = w * spendings[i] + b
             error = sales[i] - prediction
-            dl_dw += -2 * spendings[i] * error  # градиент для w
-            dl_db += -2 * error  # градиент для b
+            dl_dw += -2 * spendings[i] * error  # Gradient for w
+            dl_db += -2 * error  # Gradient for b
+            # TODO fix trash
             # if i % 50 == 0:
             #     logging.info(f"i: {i} dw: {dl_dw} db: {dl_db}, adv: {spendings[i]} pred: {prediction} err: {error}")
             # logging.info("      i: {:3d} dw: {:12.3f} db: {:12.3f} adv: {:4.2f} pred: {:5.3f} err: {:8.8}".format(i, dl_dw, dl_db, spendings[i], prediction, error))
         # logging.info(f"dl_dw: {dl_dw} dl_db: {dl_db}")
 
-        # Добавляем регуляризационный компонент
-        dl_dw += 2 * tikhonov_regular * w  # для L2 регуляризации
-        dl_db += 2 * tikhonov_regular * b  # для L2 регуляризации
+        # Adding the regularization component
+        dl_dw += 2 * tikhonov_regular * w  # for L2 regularization
+        dl_db += 2 * tikhonov_regular * b  # for L2 regularization
 
-        # Линейная регуляризация добавляется к dl_db, если необходимо
+        # Linear regularization is added to dl_db if necessary
         w -= (learning_rate / float(N)) * dl_dw
         b -= (learning_rate / float(N)) * dl_db
         logging.info(f"   Total ----------> w: {w} b: {b}")
 
-        # Ограничение на значения w и b для предотвращения улета в стратосферу и переполнения
+        # Limiting the values of w and b to prevent overflow and underflow
         w = max(min(w, 1e10), -1e10)
         b = max(min(b, 1e10), -1e10)
 
@@ -100,14 +101,14 @@ class LinearRegressionWithGradientDescent:
             regularization: float,
     ) -> float:
         """
-        Вычисляет среднеквадратичную ошибку (MSE) с учетом регуляризации.
+        Computes the mean squared error (MSE) considering regularization.
 
-        :param spendings: список значений признака
-        :param sales: список значений целевой переменной
-        :param w: коэффициент наклона модели
-        :param b: свободный член модели
-        :param regularization: параметр регуляризации
-        :return: среднеквадратичная ошибка с учетом регуляризации
+        :param spendings: A list of feature values
+        :param sales: A list of target variable values
+        :param w: Slope coefficient of the model
+        :param b: Intercept of the model
+        :param regularization: Regularization parameter
+        :return: Mean squared error considering regularization
         """
         N = len(spendings)
         total_error = 0.0
@@ -117,8 +118,8 @@ class LinearRegressionWithGradientDescent:
             error = sales[i] - prediction
             total_error += error ** 2
 
-        # Добавление к ошибке регуляризационного штрафа
-        total_error = (total_error / float(N)) + (regularization * w ** 2)  # L2 штраф
+        # Adding the regularization penalty to the error
+        total_error = (total_error / float(N)) + (regularization * w ** 2)  # L2 penalty
 
         return total_error
 
@@ -130,21 +131,21 @@ class LinearRegressionWithGradientDescent:
             b: float,
             learning_rate: float,
             epochs: int,
-            regularization: float,  # Параметр регуляризации
+            regularization: float,  # Regularization parameter
             stop_factor: int = 0.00001,
     ) -> tuple[float, float]:
         """
-        Обучает параметры линейной модели методом градиентного спуска с регуляризацией.
+        Trains the parameters of the linear model using gradient descent with regularization.
 
-        :param spendings: список значений признака
-        :param sales: список значений целевой переменной
-        :param w: начальное значение коэффициента наклона
-        :param b: начальное значение свободного члена
-        :param learning_rate: скорость обучения
-        :param epochs: количество итераций обучения
-        :param regularization: параметр регуляризации
-        :param stop_factor: уровень останова процесса оптимизации 0.00001 = 0.001%
-        :return: обученные параметры (w, b)
+        :param spendings: A list of feature values
+        :param sales: A list of target variable values
+        :param w: Initial slope coefficient
+        :param b: Initial intercept
+        :param learning_rate: Learning rate
+        :param epochs: Number of training iterations
+        :param regularization: Regularization parameter
+        :param stop_factor: Stopping factor for optimization process 0.00001 = 0.001%
+        :return: Trained parameters (w, b)
         """
         previous_loss = None
         for epoch in range(epochs):
@@ -152,7 +153,7 @@ class LinearRegressionWithGradientDescent:
 
             if epoch % 10 == 0:
                 loss = self.avg_loss(spendings, sales, w, b, regularization)
-                logging.info("Эпоха: {:5d} loss: {:4.10f} W={:8f} B={:8f}".format(epoch, loss, w, b))
+                logging.info("Epoch: {:5d} loss: {:4.10f} W={:8f} B={:8f}".format(epoch, loss, w, b))
                 if previous_loss is not None:
                     if stop_factor > abs(loss - previous_loss) / max(previous_loss, 1e-10):  # prevent 0 division
                         break
@@ -163,25 +164,25 @@ class LinearRegressionWithGradientDescent:
     @staticmethod
     def predict(x: float, w: float, b: float) -> float:
         """
-        Вычисляет предсказание линейной модели.
+        Computes the prediction of the linear model.
 
-        :param x: входное значение
-        :param w: коэффициент наклона
-        :param b: свободный член
-        :return: предсказанное значение
+        :param x: Input value
+        :param w: Slope coefficient
+        :param b: Intercept
+        :return: Predicted value
         """
         return w * x + b
 
     @staticmethod
     def r_squared(y_fact: list[float], y_forecast: list[float]) -> float:
         """
-        Вычисляет коэффициент детерминации R^2.
-        Значение R² варьируется от 0 до 1, где 1 указывает на то, что модель
-        объясняет 100% вариации, а 0 указывает на то, что модель не объясняет ничего
+        Computes the coefficient of determination R^2.
+        The R² value ranges from 0 to 1, where 1 indicates that the model
+        explains 100% of the variation, and 0 indicates that the model explains nothing.
 
-        :param y_fact: Список истинных значений.
-        :param y_forecast: Список предсказанных значений.
-        :return: Значение R^2 [0...1]
+        :param y_fact: A list of true values.
+        :param y_forecast: A list of predicted values.
+        :return: R^2 value [0...1]
         """
         ss_total = sum((y - sum(y_fact) / len(y_fact)) ** 2 for y in y_fact)
         ss_residual = sum((y_fact[i] - y_forecast[i]) ** 2 for i in range(len(y_fact)))
@@ -191,13 +192,13 @@ class LinearRegressionWithGradientDescent:
     @staticmethod
     def mean_absolute_error(y_fact: list[float], y_forecast: list[float]) -> float:
         """
-        Вычисляет среднюю абсолютную ошибку (MAE).
-        Показывает, насколько в среднем предсказания модели отличаются
-        от фактических значений, при этом игнорируя направление ошибки
+        Computes the mean absolute error (MAE).
+        It shows how much the model's predictions differ on average
+        from the actual values, ignoring the direction of the error.
 
-        :param y_fact: Список истинных значений.
-        :param y_forecast: Список предсказанных значений.
-        :return: Средняя абсолютная ошибка (MAE).
+        :param y_fact: A list of true values.
+        :param y_forecast: A list of predicted values.
+        :return: Mean absolute error (MAE).
         """
         n = len(y_fact)
         mae = sum(abs(y_fact[i] - y_forecast[i]) for i in range(n)) / n
@@ -206,22 +207,22 @@ class LinearRegressionWithGradientDescent:
     @staticmethod
     def mean_squared_error(y_fact: list[float], y_forecast: list[float]) -> float:
         """
-        Вычисляет среднюю квадратичную ошибку (MSE).
-        MSE подчеркивает крупные ошибки; чем больше ошибка,
-        тем больше ее влияние на итоговое значение метрики
+        Computes the mean squared error (MSE).
+        MSE emphasizes large errors; the bigger the error,
+        the greater its impact on the final metric value.
 
-        :param y_fact: Список истинных значений.
-        :param y_forecast: Список предсказанных значений.
-        :return: Средняя квадратичная ошибка (MSE).
+        :param y_fact: A list of true values.
+        :param y_forecast: A list of predicted values.
+        :return: Mean squared error (MSE).
         """
         n = len(y_fact)
         mse = sum((y_fact[i] - y_forecast[i]) ** 2 for i in range(n)) / n
         return mse
 
 
-def create_data_set(path: str = 'advertising.csv', x: int = 0, y: int = 3) -> tuple[list, list]:
+def create_data_set(path: str = 'data/advertising.csv', x: int = 0, y: int = 3) -> tuple[list, list]:
     """
-    Чтение данных из CSV файла
+    Reading data from a CSV file
     :param y: target
     :param x: data
     :param path: str path to the file with data
@@ -234,7 +235,7 @@ def create_data_set(path: str = 'advertising.csv', x: int = 0, y: int = 3) -> tu
         for row in csv_reader:
             if row[0].isalpha():
                 continue
-            # отбираем 2 колонки = X -> реклама и Y -> продажи
+            # Selecting 2 columns = X -> advertisement and Y -> sales
             spendings.append(float(row[x]))
             sales.append(float(row[y]))
     return spendings, sales
@@ -242,7 +243,7 @@ def create_data_set(path: str = 'advertising.csv', x: int = 0, y: int = 3) -> tu
 
 def train_test_spliter(spendings: list, train_split_ratio=0.7) -> tuple[list, list]:
     """
-    Разбиение датасета на тренировочную и тестовую выборки
+    Splitting the dataset into training and test subsets
     :param spendings: list full dataset
     :param train_split_ratio: % amount of data for train purposes
     :return: tuple[list, list]
@@ -276,7 +277,7 @@ def model_testing_launcher(
         ridge=0.001,
 ):
     """
-    Песочника для запуска и тестирования модели
+    Sandbox for launching and testing the model
     :param learning_rate:
     :param iterations:
     :param w:
@@ -290,19 +291,19 @@ def model_testing_launcher(
     # Split data
     train_data_set_indexes, test_data_set_indexes = train_test_spliter(spendings, train_split_ratio=0.8)
 
-    # Тестовый запуск прогноза сущности y_new (sales - продажи) по значению x_new (spendings - затраты на рекламу)
+    # Test launch forecast entity y_new (sales) by value x_new (spendings)
     ml_model = LinearRegressionWithGradientDescent()
 
-    # Попробуем нормализовать данные, чтобы избежать переобучения.
-    # !!! Нормализация побеждает переобучение на данных advertising.csv колонки 0-3. Если её отключить будет беда!!!
+    # Let's try normalizing data to avoid overfitting.
+    # !!! Normalization prevents overfitting on the data advertising.csv columns 0-3. If you disable it, there will be problems!!!
     spendings = ml_model.data_normalizer(spendings)  # !!!
 
-    # Создание среза данных для тренировки модели
+    # Creating a data slice for training the model
     spendings_train_data = [spendings[i] for i in train_data_set_indexes]
     sales_train_data = [sales[i] for i in train_data_set_indexes]
 
     logging.info(
-        f"Запуск тренировки LinReg модели на параметрах: w={w}, b={b} c alpha={learning_rate} на {iterations} итерациях и остановом на {stop_factor * 100}%")
+        f"Launching LinReg model training with parameters: w={w}, b={b} learning rate={learning_rate} for {iterations} iterations and stopping at {stop_factor * 100}%")
 
     start_time = time.time()
     w, b = ml_model.train(
@@ -316,17 +317,17 @@ def model_testing_launcher(
     )
     end_time = time.time()
 
-    logging.info(f"Время выполнения тренировки модели: {round(end_time - start_time, 3)} секунд")
+    logging.info(f"Training model took: {round(end_time - start_time, 3)} seconds")
     logging.info(
-        f"Правильнее - время вычисления значений критериев оптимизации или поиска значений коэффициентов 'W' и 'B' линейного уровнения y=wx+b")
-    logging.info(f"Значения коэффициентов 'W' и 'B' линейного уровнения y=wx+b W = {w} B = {b}")
+        f"Right - time to compute optimization criteria or to find values of coefficients 'W' and 'B' of the linear equation y=wx+b")
+    logging.info(f"Values of coefficients 'W' and 'B' of the linear equation y=wx+b W = {w} B = {b}")
 
-    # Тестирование результатов тренировки
-    # Создание среза данных для тестирования полученной модели
+    # Testing the training results
+    # Creating a data slice for testing the obtained model
 
     spendings_test = [spendings[i] for i in test_data_set_indexes]
 
-    # Сортируем для большей наглядности и анализируемости результатов
+    # Sorting for better visibility and analyzability of results
     tuples = list(zip(spendings_test, test_data_set_indexes))
     tuples = sorted(tuples, key=lambda x: x)
     spendings_test = [i[0] for i in tuples]
@@ -335,7 +336,7 @@ def model_testing_launcher(
     sales_test_fact = [sales[i] for i in test_data_set_indexes]
     sales_test_forecast = [ml_model.predict(val, w, b) for val in spendings_test]
 
-    # Срез примеров данных Факт-Прогноз для визуального сравнения
+    # Sample of data examples Факт-Прогноз for visual comparison
     sample = 20
     assert sample <= len(sales_test_fact)
     for i in range(sample):
@@ -344,14 +345,14 @@ def model_testing_launcher(
     rr_metric = ml_model.r_squared(sales_test_fact, sales_test_forecast)
     mse_metric = ml_model.mean_squared_error(sales_test_fact, sales_test_forecast)
     mae_metric = ml_model.mean_absolute_error(sales_test_fact, sales_test_forecast)
-    logging.info(f"Результаты тестирования модели: R^2={rr_metric} MSE={mse_metric} MAE={mae_metric}")
+    logging.info(f"Model testing results: R^2={rr_metric} MSE={mse_metric} MAE={mae_metric}")
 
-    # Прогнозирование продаж по значению бюджета
-    adv_budget = 23.0  # spendings - 15.09 ожидается для 23
-    # adv_budget = (adv_budget - ml_model.MEAN) / ml_model.STD_DEV  # нормализация в случае нормализации данных
+    # Forecasting sales based on budget value
+    adv_budget = 23.0  # spendings - 15 expected for 23
+    # adv_budget = (adv_budget - ml_model.MEAN) / ml_model.STD_DEV  # normalization in case of data normalization
     sales_forecast = ml_model.predict(adv_budget, w, b)  # sales
     logging.info(
-        f"Прогноз продаж составит: {round(sales_forecast, 1)} при затратах на рекламу: {adv_budget}")  # 15.09 ожидается
+        f"Sales forecast will be: {round(sales_forecast, 1)} with advertising costs: {adv_budget}")  # 15.09 expected
 
 
 if __name__ == "__main__":
