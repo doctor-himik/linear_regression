@@ -39,25 +39,22 @@ class LinearRegressionWithGradientDescent:
             error = sales[i] - prediction
             dl_dw += -2 * spendings[i] * error  # Gradient for w
             dl_db += -2 * error  # Gradient for b
-            # TODO delete logging after finishing tests and upgrades
+            # TODO fix trash
             # if i % 50 == 0:
             #     logging.info(f"i: {i} dw: {dl_dw} db: {dl_db}, adv: {spendings[i]} pred: {prediction} err: {error}")
             # logging.info("      i: {:3d} dw: {:12.3f} db: {:12.3f} adv: {:4.2f} pred: {:5.3f} err: {:8.8}".format(i, dl_dw, dl_db, spendings[i], prediction, error))
         # logging.info(f"dl_dw: {dl_dw} dl_db: {dl_db}")
 
         # Adding the regularization component
-        # TODO check if regularization really needed
         dl_dw += 2 * tikhonov_regular * w  # for L2 regularization
         dl_db += 2 * tikhonov_regular * b  # for L2 regularization
 
         # Linear regularization is added to dl_db if necessary
-        # TODO check if regularization really needed
         w -= (learning_rate / float(N)) * dl_dw
         b -= (learning_rate / float(N)) * dl_db
         logging.info(f"   Total ----------> w: {w} b: {b}")
 
         # Limiting the values of w and b to prevent overflow and underflow
-        # TODO check if min max really needed
         w = max(min(w, 1e10), -1e10)
         b = max(min(b, 1e10), -1e10)
 
