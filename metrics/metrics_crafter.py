@@ -9,11 +9,17 @@ class MetricsCrafter:
 
         :param y_fact: A list of true values.
         :param y_forecast: A list of predicted values.
-        :return: R^2 value [0...1]
+        :return: R^2 value [0...1] but NO! Value is between [-inf...1]
         """
+        if not y_fact or not y_forecast:
+            raise ValueError('y_fact neither y_forecast nor both can not be empty')
+        if len(y_fact) != len(y_forecast):
+            raise ValueError(f'Unequal dimension y_fact:{len(y_fact)} and y_forecast:{len(y_forecast)}')
         ss_total = sum((y - sum(y_fact) / len(y_fact)) ** 2 for y in y_fact)
+        if ss_total == 0:
+            return 1
         ss_residual = sum((y_fact[i] - y_forecast[i]) ** 2 for i in range(len(y_fact)))
-        return 1 - (ss_residual / ss_total)
+        return 1 - ss_residual / ss_total
 
     @staticmethod
     def mean_absolute_error(y_fact: list[float], y_forecast: list[float]) -> float:
@@ -26,6 +32,10 @@ class MetricsCrafter:
         :param y_forecast: A list of predicted values.
         :return: Mean absolute error (MAE).
         """
+        if not y_fact or not y_forecast:
+            raise ValueError('y_fact neither y_forecast nor both can not be empty')
+        if len(y_fact) != len(y_forecast):
+            raise ValueError(f'Unequal dimension y_fact:{len(y_fact)} and y_forecast:{len(y_forecast)}')
         n = len(y_fact)
         return sum(abs(y_fact[i] - y_forecast[i]) for i in range(n)) / n
 
@@ -40,6 +50,10 @@ class MetricsCrafter:
         :param y_forecast: A list of predicted values.
         :return: Mean squared error (MSE).
         """
+        if not y_fact or not y_forecast:
+            raise ValueError('y_fact neither y_forecast nor both can not be empty')
+        if len(y_fact) != len(y_forecast):
+            raise ValueError(f'Unequal dimension y_fact:{len(y_fact)} and y_forecast:{len(y_forecast)}')
         n = len(y_fact)
         return sum((y_fact[i] - y_forecast[i]) ** 2 for i in range(n)) / n
 
