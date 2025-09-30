@@ -15,18 +15,21 @@ data_sets = [
 
 
 class TestMetricsCrafter:
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast, expected", data_sets)
     def test_metrics_r_squared(self, y_fact, y_forecast, expected):
         # Проверка R^2
         r2_result = MetricsCrafter.r_squared(y_fact, y_forecast)
         assert round(r2_result, 4) == round(expected[0], 4)
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast, expected", data_sets)
     def test_metrics_mean_absolute_error(self, y_fact, y_forecast, expected):
         # Проверка MAE
         mae_result = MetricsCrafter.mean_absolute_error(y_fact, y_forecast)
         assert round(mae_result, 4) == round(expected[1], 4)
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast, expected", data_sets)
     def test_metrics_mean_squared_error(self, y_fact, y_forecast, expected):
         # Проверка MSE
@@ -41,36 +44,42 @@ class TestMetricsCrafter:
         ([1], [1, 2]),
     ]
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", empty_data_set)
     def test_empty_lists_mean_absolute_error(self, y_fact, y_forecast):
         # Проверка обработки пустых списков
         with pytest.raises(ValueError):
             MetricsCrafter.mean_absolute_error(y_fact, y_forecast)
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", empty_data_set)
     def test_empty_lists_mean_squared_error(self, y_fact, y_forecast):
         # Проверка обработки пустых списков
         with pytest.raises(ValueError):
             MetricsCrafter.mean_squared_error(y_fact, y_forecast)
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", empty_data_set)
     def test_empty_lists_r_squared(self, y_fact, y_forecast):
         # Проверка обработки пустых списков
         with pytest.raises(ValueError):
             MetricsCrafter.r_squared(y_fact, y_forecast)
 
+    @pytest.mark.unit
     def test_single_value_lists_r_squared(self):
         # Проверка обработки списков, содержащих одно значение
         y_fact = [5]
         y_forecast = [5]
         assert MetricsCrafter.r_squared(y_fact, y_forecast) == 1.0
 
+    @pytest.mark.unit
     def test_single_value_lists_mean_absolute_error(self):
         # Проверка обработки списков, содержащих одно значение
         y_fact = [5]
         y_forecast = [5]
         assert MetricsCrafter.mean_absolute_error(y_fact, y_forecast) == 0.0
 
+    @pytest.mark.unit
     def test_single_value_lists_mean_squared_error(self):
         # Проверка обработки списков, содержащих одно значение
         y_fact = [5]
@@ -89,16 +98,19 @@ class TestMetricsCrafter:
         ),  # 100 random fact - prediction
     ]
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", pbt_data_set)
     def test_pbt_mean_absolute_error(self, y_fact, y_forecast):
         # Property-based tests for metrics
         assert MetricsCrafter.mean_absolute_error(y_fact, y_forecast) >= 0
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", pbt_data_set)
     def test_pbt_mean_squared_error(self, y_fact, y_forecast):
         # Property-based tests for metrics
         assert MetricsCrafter.mean_squared_error(y_fact, y_forecast) >= 0
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("y_fact, y_forecast", pbt_data_set)
     def test_pbt_r_squared(self, y_fact, y_forecast):
         # Property-based tests for metrics - r_squared have to be in range [0,1]
